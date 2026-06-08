@@ -42,7 +42,7 @@ app.post("/upload/pdf", upload.single("pdf"), async (req, res) => {
       filename: req.file.originalname,
       destination: req.file.destination,
       path: req.file.path,
-    }),
+    })
   );
   return res.json({ message: "uploaded" });
 });
@@ -59,7 +59,7 @@ app.get("/chat", async (req, res) => {
     {
       url: "http://localhost:6333",
       collectionName: "rag-pdf-bull-mqueue",
-    },
+    }
   );
   const ret = vectorStore.asRetriever({
     k: 2,
@@ -74,7 +74,7 @@ app.get("/chat", async (req, res) => {
   `;
 
   const chatResult = await client.chat.completions.create({
-    model: "gpt-4-o",
+    model: "gpt-4o",
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: userQuery },
