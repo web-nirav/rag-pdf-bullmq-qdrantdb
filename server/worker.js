@@ -4,6 +4,9 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { Document } from "@langchain/core/documents";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { CharacterTextSplitter } from "@langchain/textsplitters";
+import 'dotenv/config'
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 const worker = new Worker(
   "file-upload-queue",
@@ -21,12 +24,10 @@ const worker = new Worker(
     // Load the PDF
     const loader = new PDFLoader(data.path);
     const docs = await loader.load();
-    console.log(`Job: 2`);
     const embeddings = new OpenAIEmbeddings({
       model: "text-embedding-3-small",
-      apiKey: "",
+      apiKey: OPENAI_API_KEY,
     });
-    console.log(`Job: 3`);
     const vectorStore = await QdrantVectorStore.fromExistingCollection(
       embeddings,
       {
@@ -34,7 +35,6 @@ const worker = new Worker(
         collectionName: "rag-pdf-bull-mqueue",
       }
     );
-    console.log(`Job: 4`);
     await vectorStore.addDocuments(docs);
     console.log(`All docs are added to vector store`);
   },

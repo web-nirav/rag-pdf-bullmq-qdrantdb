@@ -5,9 +5,12 @@ import { Queue } from "bullmq";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import OpenAI from "openai";
+import 'dotenv/config'
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 const client = new OpenAI({
-  apiKey: "",
+  apiKey: OPENAI_API_KEY,
 });
 
 const queue = new Queue("file-upload-queue", {
@@ -52,7 +55,7 @@ app.get("/chat", async (req, res) => {
 
   const embeddings = new OpenAIEmbeddings({
     model: "text-embedding-3-small",
-    apiKey: "",
+    apiKey: OPENAI_API_KEY,
   });
   const vectorStore = await QdrantVectorStore.fromExistingCollection(
     embeddings,
@@ -66,7 +69,7 @@ app.get("/chat", async (req, res) => {
   });
   const result = await ret.invoke(userQuery);
 
-  console.log("Stringify Result: ", JSON.stringify(result));
+  // console.log("Stringify Result: ", JSON.stringify(result));
 
   const SYSTEM_PROMPT = `
     You are helpful AI assistant who answers the user query based on the available context from  PDF file.
@@ -83,6 +86,33 @@ app.get("/chat", async (req, res) => {
 
   return res.json({
     message: chatResult.choices[0].message.content,
+    docs: result,
+  });
+});
+
+app.get("/chat2", async (req, res) => {
+  const userQuery = req.query.message;
+
+  const embeddings = new OpenAIEmbeddings({
+    model: "text-embedding-3-small",
+    apiKey: OPENAI_API_KEY,
+  });
+  const vectorStore = await QdrantVectorStore.fromExistingCollection(
+    embeddings,
+    {
+      url: "http://localhost:6333",
+      collectionName: "rag-pdf-bull-mqueue",
+    }
+  );
+  const ret = vectorStore.asRetriever({
+    k: 2,
+  });
+  const result = await ret.invoke(userQuery);
+
+  // console.log("Stringify Result: ", result);
+  // console.log("Stringify Result: ", JSON.stringify(result));
+
+  return res.json({
     docs: result,
   });
 });
